@@ -4,15 +4,11 @@ import java.util.Date;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
-import javax.validation.constraints.Size;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
-
-import lombok.Data;
-@Document(collection="Customer_Details")
-public class CustomerRegistrationModel {
+public class CustomerModel {
 
 //	Name, Username, Password, Address, State, 
 //	Country, Email Address, PAN, Contact No, DOB, Account Type etc
@@ -29,16 +25,15 @@ public class CustomerRegistrationModel {
 	private String email;
 	private String pan;
 	 //@Size(min=0,max=10)
+	@NotNull
 	private String contactNo;
 	 @Id
 	 private Long customerId;
 	 
 	
 	
-	@NotNull
-	@Past
-	@DateTimeFormat(pattern="dd/mm/yyyy")
-	private Date dob;
+
+	private String dob;
 	private String accountType;
 	
 	
@@ -111,10 +106,10 @@ public class CustomerRegistrationModel {
 	public void setContactNo(String contactNo) {
 		this.contactNo = contactNo;
 	}
-	public Date getDob() {
+	public String getDob() {
 		return dob;
 	}
-	public void setDob(Date dob) {
+	public void setDob(String dob) {
 		this.dob = dob;
 	}
 	public String getAccountType() {

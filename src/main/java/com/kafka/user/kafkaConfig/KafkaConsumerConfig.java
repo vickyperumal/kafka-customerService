@@ -5,6 +5,8 @@ import java.util.Map;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -13,6 +15,8 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
 import com.kafka.common.model.ProcessLoanDetails;
+
+
 
 
 @Configuration
@@ -44,5 +48,15 @@ public ConsumerFactory<String, ProcessLoanDetails> consumerFactory() {
 	//	factory.setConcurrency(2);
 		return factory;
 		
+	}
+	
+	@Bean
+	public ModelMapper modelMapper() {
+		ModelMapper mapper = new ModelMapper();
+		mapper.getConfiguration().setAmbiguityIgnored(true);
+		mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+		
+		
+		return mapper;
 	}
 }

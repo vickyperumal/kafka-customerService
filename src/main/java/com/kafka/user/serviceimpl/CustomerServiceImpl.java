@@ -1,9 +1,9 @@
 package com.kafka.user.serviceimpl;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -11,8 +11,8 @@ import org.springframework.util.CollectionUtils;
 
 import com.kafka.common.model.ProcessLoanDetails;
 import com.kafka.common.model.ServiceResponse;
-import com.kafka.user.model.CustomerRegistrationModel;
-import com.kafka.user.model.UpdateCustomerDetails;
+import com.kafka.user.entity.CustomerEntity;
+import com.kafka.user.model.CustomerModel;
 import com.kafka.user.repo.CustomerServiceRepo;
 import com.kafka.user.service.CustomerService;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
@@ -25,48 +25,50 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Autowired
 	private CustomerServiceRepo repo;
+	
+	@Autowired
+	private ModelMapper modelMapper;
 
 	@HystrixCommand(fallbackMethod = "enableFalseResponse")
 	@Override
-	public ServiceResponse<Object> insertCustomer(CustomerRegistrationModel customerEntity) {
+	public ServiceResponse<Object> insertCustomer(CustomerModel model){
+		ServiceResponse<Object> response=null;
 		try {
 			Long customerId = ThreadLocalRandom.current().nextLong(1000, 9000);
-			customerEntity.setCustomerId(customerId);
+			model.setCustomerId(customerId);
+			CustomerEntity customerEntity=modelMapper.map(model, CustomerEntity.class);
 			repo.save(customerEntity);
 			log.info("Customer Id is {}", customerId);
-			return buildServiceResponse("Registration Sucess and your customer Id is :" + customerId.toString(),
+			 response= buildServiceResponse("Registration Success and your customer Id is :" + customerId.toString(),
 					HttpStatus.OK);
 		} catch (Exception e) {
-			buildServiceResponse("Unable to Register", HttpStatus.OK);
+			response=buildServiceResponse("Unable to Register", HttpStatus.INTERNAL_SERVER_ERROR);
 			log.error("Error occured for during customer registration");
 		}
-		return null;
+		return response;
 
 	}
 
 	@Override
 	public Integer retrieveCreditScoreOfCustomer(Long customerId) {
 		try {
-			if (customerId != null) {
-				Optional<CustomerRegistrationModel> customer = repo.findById(customerId);
+				Optional<CustomerEntity> customer = repo.findById(customerId);
 				if (customer.isPresent()) {
 					log.info("Credit Score for the customer Id {} is {}", customerId, customer.get().getCreditScore());
 					return customer.get().getCreditScore();
 				}
-			}
 		} catch (Exception e) {
 			log.error("Error occured during fetch creditscore");
 		}
 		return 0;
 	}
 
-	@SuppressWarnings("null")
 	public void updateCreditScore(ProcessLoanDetails details) {
-		if (details != null || !CollectionUtils.isEmpty(details.getLoanDetails())) {
+		if (details != null && !CollectionUtils.isEmpty(details.getLoanDetails())) {
 			log.info("Updating creditScore for the customer Id {}", details.getLoanDetails().get(0).getCustomerId());
-			Optional<CustomerRegistrationModel> model = repo.findById(details.getLoanDetails().get(0).getCustomerId());
+			Optional<CustomerEntity> model = repo.findById(details.getLoanDetails().get(0).getCustomerId());
 			if (model.isPresent()) {
-				CustomerRegistrationModel customer = model.get();
+				CustomerEntity customer = model.get();
 				customer.setCreditScore(details.getCreditScore());
 				log.info("Final credit score is {}", details.getCreditScore());
 				repo.save(customer);
@@ -76,22 +78,29 @@ public class CustomerServiceImpl implements CustomerService {
 	}
 
 	@Override
-	public void updateCustomerData(UpdateCustomerDetails entity) {
+	public ServiceResponse<Object> updateCustomerData(CustomerModel updateRequest) {
 
-		Optional<CustomerRegistrationModel> customer = repo.findById(entity.getCustomerId());
+		Optional<CustomerEntity> customer = repo.findById(updateRequest.getCustomerId());
+		ServiceResponse<Object> response=null;
 		try {
 			if (customer.isPresent()) {
-				log.info("Updating details for the {} and customer id {}", entity.getCountry(), entity.getCustomerId());
-				CustomerRegistrationModel customerDetails = customer.get();
-				customerDetails.setAddress(entity.getAddress());
+				log.info("Updating details for the {} and customer id {}", updateRequest.getCountry(), updateRequest.getCustomerId());
+				CustomerEntity customerDetails = customer.get();
+				customerDetails.setAddress(updateRequest.getAddress());
 				repo.save(customerDetails);
+				 response= buildServiceResponse("Update Success",
+							HttpStatus.OK);
+				
 			}
 		} catch (Exception e) {
 			log.error("Error occured during cusotmer updation");
+			response= buildServiceResponse("Update Failure",
+					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+		return response;
 	}
 
-	public String enableFalseResponse() {
+	private String enableFalseResponse() {
 		log.info("Enabling false response");
 		return "Please try after sometime";
 	}

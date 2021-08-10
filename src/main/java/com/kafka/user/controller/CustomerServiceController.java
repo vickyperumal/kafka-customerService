@@ -1,5 +1,7 @@
 package com.kafka.user.controller;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kafka.common.model.ServiceResponse;
-import com.kafka.user.model.CustomerRegistrationModel;
+import com.kafka.user.model.CustomerModel;
 import com.kafka.user.model.UpdateCustomerDetails;
 import com.kafka.user.service.CustomerService;
 
@@ -27,14 +29,20 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/v1/customerService")
 public class CustomerServiceController {
 
-	@Autowired
+	
 	private CustomerService service;
+	
+	
+
+	public CustomerServiceController(CustomerService service) {
+		super();
+		this.service = service;
+	}
 
 	@PostMapping("/createCustomer")
-	public ServiceResponse<Object> createCustomer(@RequestBody CustomerRegistrationModel entity) {
-		
-			log.info("Registering new Customer for {}",entity.getName());
-			ServiceResponse<Object> response=service.insertCustomer(entity);
+	public ServiceResponse<Object> createCustomer(@RequestBody @Valid CustomerModel model) {
+
+			ServiceResponse<Object> response=service.insertCustomer(model);
 			return response;
 		
 	}
@@ -47,9 +55,9 @@ public class CustomerServiceController {
 	}
 	
 	@PutMapping("/updateCustomerDetails")
-	public String updateCustomerDetails(@RequestBody UpdateCustomerDetails entity ) {
+	public String updateCustomerDetails(@RequestBody CustomerModel updateRequest ) {
 		try {
-			service.updateCustomerData(entity);
+			service.updateCustomerData(updateRequest);
 		}
 		catch(Exception e) {
 			
