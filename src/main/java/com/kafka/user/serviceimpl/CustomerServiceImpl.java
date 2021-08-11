@@ -3,6 +3,7 @@ package com.kafka.user.serviceimpl;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.modelmapper.MappingException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -37,13 +38,18 @@ public class CustomerServiceImpl implements CustomerService {
 			Long customerId = ThreadLocalRandom.current().nextLong(1000, 9000);
 			model.setCustomerId(customerId);
 			CustomerEntity customerEntity=modelMapper.map(model, CustomerEntity.class);
+			customerEntity=null;
 			repo.save(customerEntity);
 			log.info("Customer Id is {}", customerId);
 			 response= buildServiceResponse("Registration Success and your customer Id is :" + customerId.toString(),
 					HttpStatus.OK);
-		} catch (Exception e) {
+		} 
+		catch(MappingException me) {
+			throw me;
+		}
+		catch (Exception e) {
 			response=buildServiceResponse("Unable to Register", HttpStatus.INTERNAL_SERVER_ERROR);
-			log.error("Error occured for during customer registration");
+			log.error("Error occured for during customer registration",e);
 		}
 		return response;
 
@@ -100,9 +106,10 @@ public class CustomerServiceImpl implements CustomerService {
 		return response;
 	}
 
-	private String enableFalseResponse() {
+	@SuppressWarnings("unused")
+	public ServiceResponse<Object> enableFalseResponse(CustomerModel model) {
 		log.info("Enabling false response");
-		return "Please try after sometime";
+		return ServiceResponse.builder().body("Please try after sometime").status(HttpStatus.INTERNAL_SERVER_ERROR.value()).build();
 	}
 
 	private <T> ServiceResponse<T> buildServiceResponse(T body, HttpStatus status) {

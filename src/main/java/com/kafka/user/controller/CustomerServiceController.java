@@ -55,13 +55,9 @@ public class CustomerServiceController {
 	}
 	
 	@PutMapping("/updateCustomerDetails")
-	public String updateCustomerDetails(@RequestBody CustomerModel updateRequest ) {
-		try {
-			service.updateCustomerData(updateRequest);
-		}
-		catch(Exception e) {
-			
-		}
-		return "success";
+	public ServiceResponse<Object> updateCustomerDetails(@RequestBody CustomerModel updateRequest ) {
+		
+		return	service.updateCustomerData(updateRequest);
+		
 	}
 }

@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -80,11 +82,41 @@ class CustomerServiceControllerTest {
 	}
 
 	@Test
-	void testGetCustomeCreditScore() {
+	void testGetCustomeCreditScore() throws JsonProcessingException, Exception {
+		Integer i=null;
+		when(service.retrieveCreditScoreOfCustomer(Mockito.any(Long.class))).thenReturn(i);
+		MvcResult result = this.mockMvc.perform(get("/v1/customerService/getCustomerCreditScore/1234"))
+				.andExpect(status().isOk())
+				.andReturn();
+		assertNotNull(result.getResponse());
+		verify(service, times(1)).retrieveCreditScoreOfCustomer(Mockito.any(Long.class));
+	}
+	
+	@Test
+	void testGetCustomeCreditScoreError() throws JsonProcessingException, Exception {
+		Integer i=null;
+		when(service.retrieveCreditScoreOfCustomer(Mockito.any(Long.class))).thenReturn(i);
+		MvcResult result = this.mockMvc.perform(get("/v1/customerService/getCustomerCreditScore/123456"))
+				.andExpect(status().isOk())
+				.andReturn();
+		assertNotNull(result.getResponse());
+		assertEquals(result.getResponse().getContentLengthLong(),0);
+		verify(service, times(1)).retrieveCreditScoreOfCustomer(Mockito.any(Long.class));
 	}
 
 	@Test
-	void testUpdateCustomerDetails() {
+	void testUpdateCustomerDetails() throws JsonProcessingException, Exception {
+		request.setCustomerId(1234L);
+		response.setBody("Update Success");
+		when(service.updateCustomerData(Mockito.any(CustomerModel.class))).thenReturn(response);
+		MvcResult result = this.mockMvc.perform(put("/v1/customerService/updateCustomerDetails")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(request)))
+				.andExpect(status().isOk())
+				.andReturn();
+		assertNotNull(result.getResponse());
+		assertTrue(result.getResponse().getContentAsString().contains("Success"));
+		verify(service, times(1)).updateCustomerData(Mockito.any(CustomerModel.class));
+	}
 	}
 
-}
