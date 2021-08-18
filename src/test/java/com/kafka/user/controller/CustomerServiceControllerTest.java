@@ -9,6 +9,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDate;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +24,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.kafka.common.model.ServiceResponse;
 import com.kafka.user.model.CustomerModel;
 import com.kafka.user.service.CustomerService;
@@ -44,16 +48,18 @@ class CustomerServiceControllerTest {
 	void setUp() throws Exception {
 		this.mockMvc = MockMvcBuilders.standaloneSetup(new CustomerServiceController(service)).build();
 		mapper=new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
+		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 		response=new ServiceResponse<Object>();
 		request = new CustomerModel();
 		request.setAccountType("savings");
 		request.setAddress("address");
-		request.setContactNo("12345");
+		request.setContactNo("1234567891");
 		request.setCountry("INDIA");
-		request.setDob("20/02/2002");
+		request.setDob(LocalDate.now().minusDays(2));
 		request.setEmail("test@gmail.com");
 		request.setName("Messi");
-		request.setPan("ARQNDNF");
+		request.setPan("ARQNDNFasd");
 	}
 
 	@Test
@@ -83,8 +89,9 @@ class CustomerServiceControllerTest {
 
 	@Test
 	void testGetCustomeCreditScore() throws JsonProcessingException, Exception {
-		Integer i=null;
-		when(service.retrieveCreditScoreOfCustomer(Mockito.any(Long.class))).thenReturn(i);
+		response.setBody(100);
+		response.setStatus(200);
+		when(service.retrieveCreditScoreOfCustomer(Mockito.any(Long.class))).thenReturn(response);
 		MvcResult result = this.mockMvc.perform(get("/v1/customerService/getCustomerCreditScore/1234"))
 				.andExpect(status().isOk())
 				.andReturn();
@@ -94,13 +101,13 @@ class CustomerServiceControllerTest {
 	
 	@Test
 	void testGetCustomeCreditScoreError() throws JsonProcessingException, Exception {
-		Integer i=null;
-		when(service.retrieveCreditScoreOfCustomer(Mockito.any(Long.class))).thenReturn(i);
+		response.setBody(null);
+		response.setStatus(500);
+		when(service.retrieveCreditScoreOfCustomer(Mockito.any(Long.class))).thenReturn(response);
 		MvcResult result = this.mockMvc.perform(get("/v1/customerService/getCustomerCreditScore/123456"))
 				.andExpect(status().isOk())
 				.andReturn();
 		assertNotNull(result.getResponse());
-		assertEquals(result.getResponse().getContentLengthLong(),0);
 		verify(service, times(1)).retrieveCreditScoreOfCustomer(Mockito.any(Long.class));
 	}
 
@@ -108,12 +115,14 @@ class CustomerServiceControllerTest {
 	void testUpdateCustomerDetails() throws JsonProcessingException, Exception {
 		request.setCustomerId(1234L);
 		response.setBody("Update Success");
+		System.out.println(mapper.writeValueAsString(request));
 		when(service.updateCustomerData(Mockito.any(CustomerModel.class))).thenReturn(response);
 		MvcResult result = this.mockMvc.perform(put("/v1/customerService/updateCustomerDetails")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(request)))
 				.andExpect(status().isOk())
 				.andReturn();
+		
 		assertNotNull(result.getResponse());
 		assertTrue(result.getResponse().getContentAsString().contains("Success"));
 		verify(service, times(1)).updateCustomerData(Mockito.any(CustomerModel.class));

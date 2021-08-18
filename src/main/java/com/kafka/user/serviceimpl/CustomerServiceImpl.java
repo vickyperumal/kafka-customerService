@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
+@SuppressWarnings("rawtypes")
 public class CustomerServiceImpl implements CustomerService {
 
 	@Autowired
@@ -38,7 +39,6 @@ public class CustomerServiceImpl implements CustomerService {
 			Long customerId = ThreadLocalRandom.current().nextLong(1000, 9000);
 			model.setCustomerId(customerId);
 			CustomerEntity customerEntity=modelMapper.map(model, CustomerEntity.class);
-			customerEntity=null;
 			repo.save(customerEntity);
 			log.info("Customer Id is {}", customerId);
 			 response= buildServiceResponse("Registration Success and your customer Id is :" + customerId.toString(),
@@ -55,18 +55,19 @@ public class CustomerServiceImpl implements CustomerService {
 
 	}
 
+	
 	@Override
-	public Integer retrieveCreditScoreOfCustomer(Long customerId) {
+	public ServiceResponse retrieveCreditScoreOfCustomer(Long customerId) {
 		try {
 				Optional<CustomerEntity> customer = repo.findById(customerId);
 				if (customer.isPresent()) {
 					log.info("Credit Score for the customer Id {} is {}", customerId, customer.get().getCreditScore());
-					return customer.get().getCreditScore();
+					return buildServiceResponse(customer.get().getCreditScore(),HttpStatus.OK);
 				}
 		} catch (Exception e) {
 			log.error("Error occured during fetch creditscore");
 		}
-		return 0;
+		return buildServiceResponse(null,HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	public void updateCreditScore(ProcessLoanDetails details) {
@@ -106,7 +107,6 @@ public class CustomerServiceImpl implements CustomerService {
 		return response;
 	}
 
-	@SuppressWarnings("unused")
 	public ServiceResponse<Object> enableFalseResponse(CustomerModel model) {
 		log.info("Enabling false response");
 		return ServiceResponse.builder().body("Please try after sometime").status(HttpStatus.INTERNAL_SERVER_ERROR.value()).build();

@@ -2,7 +2,6 @@ package com.kafka.user.controller;
 
 import javax.validation.Valid;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kafka.common.model.ServiceResponse;
 import com.kafka.user.model.CustomerModel;
-import com.kafka.user.model.UpdateCustomerDetails;
 import com.kafka.user.service.CustomerService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @Slf4j
 @RequestMapping("/v1/customerService")
+@SuppressWarnings("rawtypes")
 public class CustomerServiceController {
 
 	
@@ -39,8 +38,9 @@ public class CustomerServiceController {
 		this.service = service;
 	}
 
+	
 	@PostMapping("/createCustomer")
-	public ServiceResponse<Object> createCustomer(@RequestBody @Valid CustomerModel model) {
+	public ServiceResponse createCustomer(@RequestBody @Valid CustomerModel model) {
 
 			ServiceResponse<Object> response=service.insertCustomer(model);
 			return response;
@@ -48,14 +48,14 @@ public class CustomerServiceController {
 	}
 
 	@GetMapping("/getCustomerCreditScore/{customerId}")
-	public Integer getCustomeCreditScore(@PathVariable("customerId") Long customerId) {
+	public ServiceResponse getCustomeCreditScore(@PathVariable("customerId") Long customerId) {
 		log.info("Retrieiving creditScore through customer Id {}",customerId);
 		return service.retrieveCreditScoreOfCustomer(customerId);
 
 	}
 	
 	@PutMapping("/updateCustomerDetails")
-	public ServiceResponse<Object> updateCustomerDetails(@RequestBody CustomerModel updateRequest ) {
+	public ServiceResponse updateCustomerDetails(@RequestBody CustomerModel updateRequest ) {
 		
 		return	service.updateCustomerData(updateRequest);
 		

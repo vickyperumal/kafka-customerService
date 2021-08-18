@@ -1,17 +1,18 @@
 package com.kafka.user.service;
 
 import com.kafka.common.model.ServiceResponse;
-import com.kafka.user.model.CustomerModel;
-import com.kafka.user.model.UpdateCustomerDetails;
 
+import com.kafka.user.model.CustomerModel;
+@SuppressWarnings("rawtypes")
 public interface CustomerService {
 	
-	public ServiceResponse<Object> insertCustomer(CustomerModel model);
+	public ServiceResponse insertCustomer(CustomerModel model);
 
 
-	public Integer retrieveCreditScoreOfCustomer(Long customerId);
+	public ServiceResponse retrieveCreditScoreOfCustomer(Long customerId);
 
-	public ServiceResponse<Object> updateCustomerData(CustomerModel entity);
+	
+	public ServiceResponse updateCustomerData(CustomerModel entity);
 	
 	
 
