@@ -22,9 +22,9 @@ private final Logger logger=LoggerFactory.getLogger(getClass());
 	@KafkaListener(id="consumer-1",groupId="group-id-1",topics = "loan-topic")
 		public void receiveMessage(@Payload ProcessLoanDetails user, @Header(KafkaHeaders.OFFSET) long offset){
 		logger.info("1:Received [{}] with offset [{}]", user, offset);
-		if(user.getCreditScore()!=null || user.getCreditScore()!=0) {
+		 
 			customerServiceImpl.updateCreditScore(user);	
-		}
+		
 	
 }
 
